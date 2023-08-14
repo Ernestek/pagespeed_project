@@ -1,6 +1,7 @@
 import requests
 
 import secret
+from audits import dict_audits
 
 
 def get_pagespeed_data(api_key, url):
@@ -17,26 +18,6 @@ def get_pagespeed_data(api_key, url):
     except requests.exceptions.RequestException as e:
         print("Error making API request:", e)
         return None
-
-
-def print_audit_details(audits):
-    for audit_key, audit_data in audits.items():
-        if audit_key == "screenshot-thumbnails":
-            continue  # Skip printing details for "Screenshot Thumbnails" audit
-        print(f"{'-' * 40}")
-        print(f"Audit: {audit_data['title']}")
-        print(f"Score: {audit_data['score']}")
-        if 'description' in audit_data:
-            print(f"Description: {audit_data['description']}")
-        if 'details' in audit_data:
-            if isinstance(audit_data['details'], dict):  # Check if 'details' is a dictionary
-                for detail_key, detail_value in audit_data['details'].items():
-                    if isinstance(detail_value, dict) and 'displayValue' in detail_value:
-                        print(f"   {detail_key}: {detail_value['displayValue']}")
-            else:
-                for detail_value in audit_data['details']:
-                    if isinstance(detail_value, dict) and 'displayValue' in detail_value:
-                        print(f"   {audit_key}: {detail_value['displayValue']}")
 
 
 def print_performance_metrics(metrics):
@@ -81,11 +62,18 @@ def main():
             if audit_key == "screenshot-thumbnails":
                 continue
             print("-" * 40)
+            print(audit_data['id'])
+
             print("Audit Title:", audit_data["title"])
             if 'description' in audit_data:
                 print("Description:", audit_data['description'])
             print("Score:", audit_data["score"])
             print("Display Value:", audit_data.get("displayValue"), "\n")
+            print('Details:')
+            try:
+                dict_audits[audit_data["id"]](audit_data)
+            except KeyError:
+                continue
     else:
         print("Error")
 
