@@ -33,7 +33,7 @@ def print_performance_metrics(metrics):
 
 def main():
     api_key = secret.api_key
-    url_test = 'https://github.com/Ernestek/GeekHub-CRM/blob/main/CRM_Project/account/tasks.py'
+    url_test = 'https://rozetka.com.ua/ua/'
 
     data = get_pagespeed_data(api_key, url_test)
 
@@ -59,7 +59,8 @@ def main():
         # Print audit details
         audits = data["lighthouseResult"]["audits"]
         for audit_key, audit_data in audits.items():
-            if audit_key == "screenshot-thumbnails":
+            if audit_key in ['screenshot-thumbnails', 'main-thread-tasks', 'diagnostics', 'network-requests',
+                             'final-screenshot', 'metrics', 'network-rtt']:
                 continue
             print("-" * 40)
             print(audit_data['id'])
@@ -69,10 +70,21 @@ def main():
                 print("Description:", audit_data['description'])
             print("Score:", audit_data["score"])
             print("Display Value:", audit_data.get("displayValue"), "\n")
-            print('Details:')
+
             try:
-                dict_audits[audit_data["id"]](audit_data)
+                if audit_data.get('details', {}).get('items'):
+                    print('Details:')
+                    dict_audits[audit_data["id"]](audit_data)
             except KeyError:
+                # Details info
+                items = audit_data.get('details', {}).get('items')
+                if items and audit_data['details'].get('headings'):
+                    # if there is no function, but there is data in detail
+                    dict_audits['sub_function'](audit_data)
+                elif audit_data.get('details') and items:
+                    print('details None')
+                else:
+                    print('None')
                 continue
     else:
         print("Error")
